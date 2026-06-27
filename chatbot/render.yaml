@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: trebol-motors-bot
+    runtime: python
+    region: oregon
+    plan: free
+
+    buildCommand: pip install -r requirements.txt
+
+    # El modelo bge-m3 se descarga en el primer arranque (~570 MB).
+    # Render free tier tiene 512 MB de RAM — si el arranque falla
+    # por memoria, usa el plan "Starter" ($7/mes, 512 MB garantizados)
+    # o sube el modelo a Hugging Face Hub y cárgalo en modo streaming.
+    startCommand: uvicorn chat_whatsapp:app --host 0.0.0.0 --port $PORT
+
+    envVars:
+      - key: DATABASE_URL
+        sync: false          # Se ingresa manualmente en el dashboard de Render
+      - key: WA_TOKEN
+        sync: false
+      - key: PHONE_NUMBER_ID
+        sync: false
+      - key: VERIFY_TOKEN
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      # Desactiva la descarga de modelos paralela para ahorrar RAM en arranque
+      - key: TOKENIZERS_PARALLELISM
+        value: "false"
