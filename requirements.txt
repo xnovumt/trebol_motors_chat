@@ -1,0 +1,5 @@
+# Dependencias para los scripts standalone (pipeline, evaluación, demo).
+# Para el bot FastAPI usa: pip install -r chatbot/requirements.txt
+psycopg2-binary==2.9.9
+sentence-transformers==3.1.1
+python-dotenv==1.0.1
