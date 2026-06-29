@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trébol Motors — Búsqueda Semántica</title>
+<style>
+  :root {
+    --accent:      #1D9E75;
+    --accent-bg:   #E1F5EE;
+    --accent-dark: #085041;
+    --accent-bdr:  #5DCAA5;
+    --bg:          #F8FAFB;
+    --surface:     #FFFFFF;
+    --surface-2:   #F3F4F6;
+    --text:        #111827;
+    --text-sec:    #4B5563;
+    --text-muted:  #9CA3AF;
+    --border:      #E5E7EB;
+    --border-s:    #D1D5DB;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+         background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+  input, select, button { font-family: inherit; font-size: 14px; }
+
+  nav { display: flex; align-items: center; justify-content: space-between;
+        padding: 14px 24px; border-bottom: 1px solid var(--border);
+        background: var(--surface); position: sticky; top: 0; z-index: 10; }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-name { font-size: 13px; font-weight: 600; letter-spacing: .06em; color: var(--text); }
+  .logo-sub  { font-size: 11px; color: var(--text-muted); display: block; margin-top: -2px; }
+  .nav-btn { padding: 5px 13px; border-radius: 8px; border: 1px solid var(--border);
+             background: transparent; color: var(--text-sec); cursor: pointer; font-size: 12px; }
+  .nav-btn:hover { background: var(--surface-2); }
+  .nav-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .nav-btn.primary:hover { background: var(--accent-dark); }
+
+  .search-section { padding: 28px 24px 20px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+             color: var(--accent); margin-bottom: 6px; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 16px; line-height: 1.3; }
+
+  .search-wrap { display: flex; align-items: center; border: 1.5px solid var(--border-s);
+                 border-radius: 10px; padding: 0 14px; background: var(--surface-2);
+                 transition: border-color .15s; margin-bottom: 12px; }
+  .search-wrap:focus-within { border-color: var(--accent); background: white; }
+  .search-icon { color: var(--text-muted); margin-right: 10px; flex-shrink: 0; }
+  #q { flex: 1; border: none; background: transparent; outline: none; padding: 11px 0;
+       font-size: 14px; color: var(--text); }
+  #q::placeholder { color: var(--text-muted); }
+  .clear-btn { background: none; border: none; cursor: pointer; color: var(--text-muted);
+               padding: 4px 6px; border-radius: 4px; font-size: 13px; }
+  .clear-btn:hover { color: var(--text); background: var(--border); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px;
+          border-radius: 100px; border: 1px solid var(--border); background: white;
+          color: var(--text-sec); cursor: pointer; font-size: 12px; transition: all .14s; }
+  .chip:hover { border-color: var(--accent-bdr); color: var(--accent-dark); background: var(--accent-bg); }
+  .chip.active { border-color: var(--accent); color: var(--accent-dark);
+                 background: var(--accent-bg); font-weight: 500; }
+
+  .filter-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .filter-tag  { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px;
+                 border-radius: 100px; font-size: 11px; background: var(--accent-bg);
+                 color: var(--accent-dark); border: 1px solid var(--accent-bdr); }
+  .filter-label { font-size: 11px; color: var(--text-muted); }
+
+  .pipeline { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; padding: 8px 14px;
+              background: var(--surface-2); border-radius: 8px; border: 1px solid var(--border); }
+  .pipe-step { font-size: 11px; padding: 2px 8px; border-radius: 4px; color: var(--text-sec); }
+  .pipe-step.hi { background: var(--accent-bg); color: var(--accent-dark); border: 1px solid var(--accent-bdr); }
+  .pipe-arrow { font-size: 11px; color: var(--text-muted); }
+  .pipe-meta  { margin-left: auto; font-size: 10px; color: var(--text-muted); }
+
+  .layout { display: grid; grid-template-columns: 192px 1fr; min-height: 60vh; }
+
+  aside { padding: 20px 16px; border-right: 1px solid var(--border); background: var(--surface); }
+  .filter-group { margin-bottom: 20px; }
+  .filter-group h3 { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+                     color: var(--text-muted); margin-bottom: 9px; }
+  .filter-group label { display: flex; align-items: center; gap: 8px; font-size: 13px;
+                        color: var(--text-sec); cursor: pointer; padding: 3px 0; }
+  .filter-group label:hover { color: var(--text); }
+  input[type=checkbox] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+  input[type=range]    { accent-color: var(--accent); width: 100%; }
+  .price-labels { display: flex; justify-content: space-between; font-size: 11px;
+                  color: var(--text-muted); margin-top: 4px; }
+  #pval { color: var(--text-sec); font-weight: 500; }
+
+  main { padding: 20px; }
+  .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .results-header p { font-size: 14px; font-weight: 500; }
+  .results-header p span { font-weight: 400; color: var(--text-muted); }
+  select { padding: 5px 10px; border-radius: 7px; border: 1px solid var(--border);
+           background: white; color: var(--text-sec); cursor: pointer; font-size: 12px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+
+  .card { background: white; border: 1px solid var(--border); border-radius: 12px;
+          overflow: hidden; transition: border-color .15s, transform .15s; cursor: pointer; }
+  .card:hover { border-color: var(--accent-bdr); transform: translateY(-2px); }
+
+  .simbar      { height: 4px; background: var(--border); }
+  .simbar-fill { height: 100%; background: var(--accent);
+                 transition: width .75s cubic-bezier(.4,0,.2,1); }
+
+  .card-img { height: 110px; background: var(--surface-2); display: flex; align-items: center;
+              justify-content: center; position: relative; }
+  .tipo-badge { position: absolute; top: 8px; left: 8px; font-size: 10px; font-weight: 600;
+                text-transform: uppercase; letter-spacing: .08em; background: white;
+                border: 1px solid var(--border); color: var(--text-sec);
+                padding: 2px 7px; border-radius: 100px; }
+  .sim-badge  { position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: 600;
+                background: var(--accent-bg); color: var(--accent-dark);
+                border: 1px solid var(--accent-bdr); padding: 2px 7px; border-radius: 100px;
+                display: flex; align-items: center; gap: 3px; }
+  .sim-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+  .card-body  { padding: 13px; }
+  .card-brand { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+                color: var(--text-muted); margin-bottom: 2px; }
+  .card-model { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+  .specs { display: flex; flex-direction: column; gap: 3px; margin-bottom: 12px; }
+  .spec  { display: flex; justify-content: space-between; }
+  .spec span:first-child { font-size: 11px; color: var(--text-muted); }
+  .spec span:last-child  { font-size: 11px; color: var(--text-sec); font-weight: 500; }
+  .card-footer { border-top: 1px solid var(--border); padding-top: 11px;
+                 display: flex; align-items: flex-end; justify-content: space-between; }
+  .card-ref   { font-size: 10px; color: var(--text-muted); margin-bottom: 2px; }
+  .card-price { font-size: 17px; font-weight: 700; color: var(--text); }
+  .card-cta   { padding: 5px 10px; border-radius: 7px; border: 1px solid var(--accent-bdr);
+                background: var(--accent-bg); color: var(--accent-dark); font-size: 11px;
+                font-weight: 600; cursor: pointer; transition: all .14s; }
+  .card-cta:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+  .skeleton { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+  .sk-img  { height: 114px; background: var(--surface-2); }
+  .sk-body { padding: 13px; display: flex; flex-direction: column; gap: 8px; }
+  .sk-line { height: 12px; background: var(--surface-2); border-radius: 4px; }
+  .w60 { width: 60%; } .w80 { width: 80%; } .w40 { width: 40%; }
+
+  .empty-state { padding: 48px 24px; text-align: center; color: var(--text-muted); }
+  .empty-state p { margin-bottom: 6px; }
+  .error-state { padding: 28px 24px; background: #FEF2F2; border: 1px solid #FECACA;
+                 border-radius: 10px; margin: 16px; }
+  .error-state p { color: #7F1D1D; font-size: 13px; margin-bottom: 6px; }
+  .error-state code { font-size: 12px; background: white; padding: 2px 7px; border-radius: 5px;
+                      color: #991B1B; border: 1px solid #FECACA; }
+
+  .exp-section { border-top: 1px solid var(--border); padding: 20px 24px; background: var(--surface); }
+  .exp-header  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .exp-header h2 { font-size: 15px; font-weight: 600; }
+  .exp-btn { padding: 5px 13px; border-radius: 8px; border: 1px solid var(--border);
+             background: white; color: var(--text-sec); cursor: pointer; font-size: 12px; }
+  .exp-btn:hover { background: var(--surface-2); }
+  .muted { color: var(--text-muted); font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border);
+             font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+             color: var(--text-muted); }
+  tbody td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text-sec); }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--surface-2); }
+  .best-row td { color: var(--accent-dark); font-weight: 600; background: var(--accent-bg) !important; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="#">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+      <ellipse cx="13" cy="8"  rx="5"   ry="6.5" fill="#1D9E75" opacity=".85"/>
+      <ellipse cx="13" cy="18" rx="5"   ry="6.5" fill="#1D9E75" opacity=".85"/>
+      <ellipse cx="8"  cy="13" rx="6.5" ry="5"   fill="#1D9E75" opacity=".85"/>
+      <ellipse cx="18" cy="13" rx="6.5" ry="5"   fill="#1D9E75" opacity=".85"/>
+      <circle  cx="13" cy="13" r="3.2"            fill="#1D9E75"/>
+      <line x1="13" y1="23.5" x2="13" y2="26" stroke="#1D9E75" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <span class="logo-name">TRÉBOL MOTORS</span>
+      <span class="logo-sub">Manizales · RAG demo</span>
+    </div>
+  </a>
+  <div style="display:flex;gap:8px;">
+    <button class="nav-btn" onclick="toggleExp()">Experimento de chunking</button>
+    <button class="nav-btn primary" onclick="document.getElementById('q').focus()">Buscar vehículo</button>
+  </div>
+</nav>
+
+<section class="search-section">
+  <p class="eyebrow">Búsqueda semántica · estrategia semantic · BAAI/bge-m3 1024 dim</p>
+  <h1>Describe el vehículo que buscas<br>en tus propias palabras.</h1>
+
+  <div class="search-wrap">
+    <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="7" cy="7" r="5" stroke="#9CA3AF" stroke-width="1.5"/>
+      <line x1="10.5" y1="10.5" x2="14" y2="14" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <input id="q" type="text" placeholder="ej: camioneta familiar para viajar con los niños…" autocomplete="off">
+    <button class="clear-btn" onclick="clearSearch()" aria-label="Limpiar búsqueda">✕</button>
+  </div>
+
+  <div class="chips">
+    <button class="chip" data-q="camioneta familiar para viajar con los niños" onclick="pickChip(this)">🚙 Camioneta familiar</button>
+    <button class="chip" data-q="SUV automática disponible" onclick="pickChip(this)">SUV automática</button>
+    <button class="chip" data-q="pickup diesel mecánica" onclick="pickChip(this)">Pickup diésel</button>
+    <button class="chip" data-q="carro económico para la ciudad que consuma poco" onclick="pickChip(this)">Económico ciudad</button>
+    <button class="chip" data-q="algo casi nuevo con poco kilometraje" onclick="pickChip(this)">Poco kilometraje</button>
+  </div>
+
+  <div class="filter-tags" id="ftags" style="display:none;"></div>
+
+  <div class="pipeline">
+    <span class="pipe-step">Consulta NL</span>
+    <span class="pipe-arrow">→</span>
+    <span class="pipe-step hi">BAAI/bge-m3 (1024 dim)</span>
+    <span class="pipe-arrow">→</span>
+    <span class="pipe-step hi">pgvector &lt;=&gt; HNSW</span>
+    <span class="pipe-arrow">→</span>
+    <span class="pipe-step">SQL filters</span>
+    <span class="pipe-arrow">→</span>
+    <span class="pipe-step">Groq / Llama-3</span>
+    <span class="pipe-meta">estrategia: semantic · chunk completo del vehículo</span>
+  </div>
+</section>
+
+<div class="layout">
+  <aside>
+    <div class="filter-group">
+      <h3>Marca</h3>
+      <label><input type="checkbox" onchange="applyFilters()"> Mazda</label>
+      <label><input type="checkbox" onchange="applyFilters()"> Toyota</label>
+      <label><input type="checkbox" onchange="applyFilters()"> Chevrolet</label>
+      <label><input type="checkbox" onchange="applyFilters()"> Renault</label>
+    </div>
+    <div class="filter-group">
+      <h3>Tipo</h3>
+      <label><input type="checkbox" onchange="applyFilters()"> SUV</label>
+      <label><input type="checkbox" onchange="applyFilters()"> Pickup</label>
+      <label><input type="checkbox" onchange="applyFilters()"> Sedán</label>
+      <label><input type="checkbox" onchange="applyFilters()"> Hatchback</label>
+    </div>
+    <div class="filter-group">
+      <h3>Combustible</h3>
+      <label><input type="checkbox" onchange="applyFilters()"> Gasolina</label>
+      <label><input type="checkbox" onchange="applyFilters()"> Híbrido</label>
+      <label><input type="checkbox" onchange="applyFilters()"> Diésel</label>
+      <label><input type="checkbox" onchange="applyFilters()"> Eléctrico</label>
+    </div>
+    <div class="filter-group">
+      <h3>Precio máximo</h3>
+      <input type="range" id="prange" min="20" max="120" value="120"
+             oninput="document.getElementById('pval').textContent='$'+this.value+'M'; applyFilters()">
+      <div class="price-labels">
+        <span>$20M</span><span id="pval">$120M</span><span>$120M</span>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="results-header">
+      <p id="rcount">Escribe una búsqueda para ver resultados <span></span></p>
+      <select id="sort" onchange="reSort()">
+        <option value="sim">Mayor similitud</option>
+        <option value="price_asc">Menor precio</option>
+        <option value="km_asc">Menor km</option>
+      </select>
+    </div>
+    <div id="results">
+      <div class="empty-state">
+        <p>Escribe lo que buscas arriba o selecciona una sugerencia.</p>
+        <p class="muted" style="margin-top:4px;">El sistema buscará semánticamente en el catálogo de Trébol Motors.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<section class="exp-section" id="exp-section" style="display:none;">
+  <div class="exp-header">
+    <h2>Experimento de chunking — resultados reales</h2>
+    <button class="exp-btn" id="exp-btn" onclick="loadExp()">Cargar desde BD</button>
+  </div>
+  <p class="muted" style="margin-bottom:14px;">
+    3 estrategias · 6 preguntas de prueba · similitud coseno promedio + puntaje 0–2
+  </p>
+  <div id="exp-panel">
+    <p class="muted">Haz clic en "Cargar desde BD" para ver los resultados del experimento.</p>
+  </div>
+</section>
+
+<script>
+  const API = window.location.protocol === 'file:' ? 'http://localhost:8000' : '';
+
+  let lastResults = [];
+  let searchTimer = null;
+
+  document.getElementById('q').addEventListener('input', e => {
+    clearTimeout(searchTimer);
+    const val = e.target.value.trim();
+    if (!val) { clearResults(); return; }
+    searchTimer = setTimeout(() => doSearch(val), 380);
+  });
+
+  document.getElementById('q').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { clearTimeout(searchTimer); doSearch(e.target.value.trim()); }
+  });
+
+  async function doSearch(q) {
+    if (!q) return;
+    showSkeleton();
+    updateFilterTags(q);
+    try {
+      const extra = buildQuerySuffix();
+      const r = await fetch(`${API}/api/buscar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q + extra })
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      if (data.error) throw new Error(data.error);
+      lastResults = data.resultados || [];
+      renderCards(sortResults(lastResults));
+    } catch {
+      showError();
+    }
+  }
+
+  function buildQuerySuffix() {
+    const brands = [...document.querySelectorAll('.filter-group:nth-child(1) input:checked')]
+      .map(el => el.parentElement.textContent.trim().toLowerCase());
+    const tipos = [...document.querySelectorAll('.filter-group:nth-child(2) input:checked')]
+      .map(el => el.parentElement.textContent.trim().toLowerCase());
+    const price = parseInt(document.getElementById('prange').value);
+    const parts = [];
+    if (brands.length) parts.push(brands.join(' o '));
+    if (tipos.length)  parts.push(tipos.join(' o '));
+    if (price < 120)   parts.push(`menos de ${price} millones`);
+    return parts.length ? ', ' + parts.join(', ') : '';
+  }
+
+  function applyFilters() {
+    const q = document.getElementById('q').value.trim();
+    if (!q) return;
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => doSearch(q), 300);
+  }
+
+  function renderCards(items) {
+    const el = document.getElementById('results');
+    if (!items.length) {
+      el.innerHTML = '<div class="empty-state"><p>No se encontraron vehículos con esas características.</p><p class="muted">Intenta con otra descripción.</p></div>';
+      document.getElementById('rcount').innerHTML = '0 vehículos <span>encontrados</span>';
+      return;
+    }
+    document.getElementById('rcount').innerHTML =
+      `${items.length} vehículo${items.length !== 1 ? 's' : ''} <span>ordenados por relevancia semántica</span>`;
+    el.innerHTML = `<div class="grid">${items.map(cardHTML).join('')}</div>`;
+    requestAnimationFrame(() => {
+      el.querySelectorAll('.simbar-fill').forEach(b => { b.style.width = b.dataset.w; });
+    });
+  }
+
+  function cardHTML(v) {
+    const sim  = Math.round((v.similitud || 0) * 100);
+    const p    = ((v.precio_venta || 0) / 1_000_000).toFixed(1);
+    const km   = (v.kilometraje || 0).toLocaleString('es-CO');
+    const ref  = v.referencia || '';
+    const nom  = `${v.marca} ${v.linea} ${v.anio}`;
+    return `
+      <div class="card" onclick="verDetalle('${ref}','${nom.replace(/'/g,"\\'")}')">
+        <div class="simbar"><div class="simbar-fill" data-w="${sim}%" style="width:0%"></div></div>
+        <div class="card-img">
+          <svg width="96" height="48" viewBox="0 0 96 48" aria-hidden="true">
+            <rect x="7"  y="21" width="82" height="18" rx="4" fill="#1D9E75" opacity=".1"/>
+            <path d="M17 21 L29 9 L67 9 L79 21"        fill="#1D9E75" opacity=".14"/>
+            <circle cx="24" cy="39" r="7"   fill="#9CA3AF" opacity=".35"/>
+            <circle cx="24" cy="39" r="4"   fill="white"/>
+            <circle cx="72" cy="39" r="7"   fill="#9CA3AF" opacity=".35"/>
+            <circle cx="72" cy="39" r="4"   fill="white"/>
+          </svg>
+          <span class="tipo-badge">${v.carroceria || '—'}</span>
+          <span class="sim-badge"><span class="sim-dot"></span>${sim}% sim.</span>
+        </div>
+        <div class="card-body">
+          <p class="card-brand">${v.marca || ''}</p>
+          <p class="card-model">${v.linea || ''} ${v.anio || ''}</p>
+          <div class="specs">
+            <div class="spec"><span>Transmisión</span><span>${v.transmision || '—'}</span></div>
+            <div class="spec"><span>Combustible</span><span>${v.combustible || '—'}</span></div>
+            <div class="spec"><span>Kilometraje</span><span>${km} km</span></div>
+          </div>
+          <div class="card-footer">
+            <div>
+              <p class="card-ref">${ref}</p>
+              <p class="card-price">$${p}M</p>
+            </div>
+            <button class="card-cta"
+              onclick="event.stopPropagation(); verDetalle('${ref}','${nom.replace(/'/g,"\\'")}')">
+              Ver detalles →
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function showSkeleton() {
+    document.getElementById('results').innerHTML =
+      `<div class="grid">${Array(4).fill(`
+        <div class="card skeleton">
+          <div class="simbar" style="background:#E5E7EB;"></div>
+          <div class="sk-img"></div>
+          <div class="sk-body">
+            <div class="sk-line w60"></div>
+            <div class="sk-line w80"></div>
+            <div class="sk-line w80"></div>
+            <div class="sk-line w40"></div>
+          </div>
+        </div>`).join('')}</div>`;
+    document.getElementById('rcount').innerHTML = 'Buscando… <span></span>';
+  }
+
+  function showError() {
+    document.getElementById('results').innerHTML = `
+      <div class="error-state">
+        <p><strong>No se pudo conectar al servidor en localhost:8000.</strong></p>
+        <p style="margin-top:6px;">Inicia el backend con:</p>
+        <p style="margin-top:6px;"><code>cd chatbot &amp;&amp; uvicorn chat_whatsapp:app --reload</code></p>
+        <p style="margin-top:8px;" class="muted">Luego recarga o escribe otra búsqueda.</p>
+      </div>`;
+    document.getElementById('rcount').innerHTML = 'Error de conexión <span></span>';
+  }
+
+  function clearResults() {
+    lastResults = [];
+    document.getElementById('results').innerHTML =
+      '<div class="empty-state"><p>Escribe lo que buscas arriba o selecciona una sugerencia.</p></div>';
+    document.getElementById('rcount').innerHTML = 'Escribe una búsqueda para ver resultados <span></span>';
+    document.getElementById('ftags').style.display = 'none';
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  }
+
+  function pickChip(el) {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    const q = el.dataset.q;
+    document.getElementById('q').value = q;
+    doSearch(q);
+  }
+
+  function clearSearch() {
+    document.getElementById('q').value = '';
+    clearResults();
+  }
+
+  function updateFilterTags(q) {
+    const tags = [];
+    const lo = q.toLowerCase();
+    for (const m of ['mazda','toyota','chevrolet','renault'])
+      if (lo.includes(m)) { tags.push(`marca: ${m[0].toUpperCase()+m.slice(1)}`); break; }
+    for (const t of ['suv','pickup','sedan','sedán','hatchback','camioneta'])
+      if (lo.includes(t)) { tags.push(`carrocería: ${t}`); break; }
+    for (const [a,b] of [['eléctrico','electrico'],['híbrido','hibrido'],['diesel','diesel'],['gasolina','gasolina']])
+      if (lo.includes(a) || lo.includes(b)) { tags.push(`combustible: ${b}`); break; }
+    const km = lo.match(/menos de (\d[\d\.]*)\s*km/);
+    if (km) tags.push(`km < ${km[1]}`);
+    const pr = lo.match(/(?:menos de|hasta|máximo)\s*(\d+)\s*(?:millones?)?/);
+    if (pr) tags.push(`precio ≤ $${pr[1]}M`);
+
+    const wrap = document.getElementById('ftags');
+    if (!tags.length) { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'flex';
+    wrap.innerHTML =
+      '<span class="filter-label">Detectado:</span>' +
+      tags.map(t => `<span class="filter-tag">${t}</span>`).join('') +
+      '<span class="filter-label">· pgvector &lt;=&gt; coseno</span>';
+  }
+
+  function sortResults(items) {
+    const mode = document.getElementById('sort').value;
+    const c = [...items];
+    if (mode === 'price_asc') return c.sort((a,b) => a.precio_venta - b.precio_venta);
+    if (mode === 'km_asc')    return c.sort((a,b) => a.kilometraje   - b.kilometraje);
+    return c.sort((a,b) => b.similitud - a.similitud);
+  }
+
+  function reSort() { if (lastResults.length) renderCards(sortResults(lastResults)); }
+
+  function verDetalle(ref, nombre) {
+    alert(`${nombre}\nReferencia: ${ref}\n\nPágina /vehiculo/:id — próximamente`);
+  }
+
+  function toggleExp() {
+    const s = document.getElementById('exp-section');
+    const visible = s.style.display !== 'none';
+    s.style.display = visible ? 'none' : 'block';
+    if (!visible) s.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  async function loadExp() {
+    const btn = document.getElementById('exp-btn');
+    btn.textContent = 'Cargando…'; btn.disabled = true;
+    try {
+      const r = await fetch(`${API}/api/experimento`);
+      const data = await r.json();
+      renderExp(data.estrategias || []);
+    } catch {
+      document.getElementById('exp-panel').innerHTML =
+        '<p class="muted" style="color:#B91C1C;">Error al conectar — ¿está corriendo el servidor?</p>';
+    }
+    btn.textContent = 'Cargar desde BD'; btn.disabled = false;
+  }
+
+  function renderExp(rows) {
+    const panel = document.getElementById('exp-panel');
+    if (!rows.length) {
+      panel.innerHTML = '<p class="muted">Sin datos — ejecuta <code>python evaluar_experimento.py</code> primero.</p>';
+      return;
+    }
+    const bestSim = Math.max(...rows.map(r => parseFloat(r.similitud_promedio || 0)));
+    panel.innerHTML = `
+      <table>
+        <thead>
+          <tr><th>Estrategia</th><th>Sim. prom.</th><th>Pts. prom.</th>
+              <th>Correctas</th><th>Parciales</th><th>Incorrectas</th></tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => {
+            const sim = parseFloat(r.similitud_promedio || 0);
+            const best = sim === bestSim;
+            return `<tr class="${best ? 'best-row' : ''}">
+              <td>${r.nombre_estrategia}${best ? ' ★' : ''}</td>
+              <td>${sim.toFixed(4)}</td>
+              <td>${parseFloat(r.puntaje_promedio || 0).toFixed(2)}</td>
+              <td>${r.respuestas_correctas ?? '—'}</td>
+              <td>${r.respuestas_parciales ?? '—'}</td>
+              <td>${r.respuestas_incorrectas ?? '—'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+  }
+</script>
+</body>
+</html>

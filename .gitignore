@@ -1,0 +1,22 @@
+# Credenciales — nunca subir al repo
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Archivos generados / personales
+*.pdf
+IMG_8185.jpg
+
+# Scratch / experimentos locales
+prueba.py
+script.py
+
+# OS
+.DS_Store
+Thumbs.db
