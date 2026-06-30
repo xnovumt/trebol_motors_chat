@@ -1,0 +1,15 @@
+:root{
+  --primary:#0D9488; --primary-deep:#0F766E; --cta:#F97316;
+  --bg:#F0FDFA; --surface:#FFFFFF; --text:#134E4A; --muted:#475569;
+  --line:#CCE9E4; --user:#0F766E;
+  --shadow:0 1px 2px rgba(19,78,74,.06),0 8px 24px rgba(19,78,74,.08);
+}
+*{box-sizing:border-box}
+html,body,#root{height:100%;margin:0}
+body{
+  font-family:'Atkinson Hyperlegible',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg); color:var(--text); font-size:16px; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+#root{display:flex;flex-direction:column;height:100dvh}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
