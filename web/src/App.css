@@ -1,0 +1,52 @@
+.topbar{position:sticky;top:0;z-index:30;background:var(--primary);color:#fff;
+  padding:calc(env(safe-area-inset-top) + 14px) 16px 14px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+.topbar .logo{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.topbar h1{font-size:1.15rem;margin:0;font-weight:700;letter-spacing:-.02em}
+.topbar p{margin:0;font-size:.8rem;opacity:.9;line-height:1.2}
+.dot{width:8px;height:8px;border-radius:50%;background:#86EFAC;display:inline-block;margin-right:5px;vertical-align:middle}
+
+.chat{flex:1 1 auto;overflow-y:auto;padding:18px 14px 6px;-webkit-overflow-scrolling:touch}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:10px;max-width:92%}
+.msg.user{margin-left:auto;flex-direction:row-reverse}
+.avatar{width:30px;height:30px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700}
+.avatar.bot{background:var(--primary);color:#fff}
+.avatar.you{background:var(--cta);color:#fff}
+.bubble{padding:12px 15px;border-radius:18px;box-shadow:var(--shadow);white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere}
+.msg.bot .bubble{background:var(--surface);border-top-left-radius:6px}
+.msg.user .bubble{background:var(--user);color:#fff;border-top-right-radius:6px}
+.bubble.err{color:#B91C1C;background:#FEE2E2;border:1px solid #FCA5A5}
+
+.sources{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.sources h3{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:2px 0}
+.src{background:#F8FFFE;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.src-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px}
+.tag{font-size:.7rem;font-weight:700;color:var(--primary-deep);background:#D9F3EF;padding:2px 8px;border-radius:999px}
+.rel{display:flex;align-items:center;gap:6px;font-size:.7rem;color:var(--muted);white-space:nowrap}
+.relbar{width:54px;height:6px;border-radius:999px;background:var(--line);overflow:hidden}
+.relbar i{display:block;height:100%;background:var(--cta);border-radius:999px}
+.src p{margin:0;font-size:.84rem;color:var(--text);opacity:.92}
+
+.empty{text-align:center;padding:26px 8px;color:var(--muted)}
+.empty .big{font-size:clamp(1.6rem,7vw,2.4rem);font-weight:700;color:var(--text);letter-spacing:-.03em;line-height:1.1;margin:0 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px}
+.chip{font:inherit;font-size:.85rem;cursor:pointer;background:var(--surface);border:1px solid var(--line);color:var(--text);padding:10px 14px;border-radius:999px;min-height:44px;transition:border-color .2s,background .2s}
+.chip:hover{border-color:var(--primary);background:#fff}
+.chip:focus-visible{outline:3px solid var(--cta);outline-offset:2px}
+
+.typing{display:flex;gap:5px;padding:14px 16px}
+.typing span{width:8px;height:8px;border-radius:50%;background:var(--primary);opacity:.5;animation:bounce 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+
+.composer{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(240,253,250,0),var(--bg) 22%);padding:10px 14px calc(env(safe-area-inset-bottom) + 12px)}
+.composer form{max-width:720px;margin:0 auto;display:flex;gap:8px;align-items:flex-end;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:6px 6px 6px 14px;box-shadow:var(--shadow)}
+.composer textarea{flex:1;border:0;resize:none;font:inherit;font-size:16px;color:var(--text);background:transparent;max-height:120px;padding:9px 0;outline:none}
+.composer textarea::placeholder{color:#7A9C97}
+.send{flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:0;cursor:pointer;background:var(--primary-deep);display:flex;align-items:center;justify-content:center;transition:background .2s,transform .1s}
+.send:hover{background:var(--primary)}
+.send:active{transform:scale(.94)}
+.send:disabled{background:#9CC7C1;cursor:not-allowed}
+.send:focus-visible{outline:3px solid var(--cta);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (min-width:768px){ .bubble{font-size:1.02rem} }
