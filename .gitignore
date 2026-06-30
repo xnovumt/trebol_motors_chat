@@ -20,3 +20,13 @@ script.py
 # OS
 .DS_Store
 Thumbs.db
+
+# RAG local / web (Claude session)
+rag_store.json
+api_key_tavily.txt
+*.env
+
+# Node / Vite
+node_modules/
+dist/
+.vite/

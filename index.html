@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0D9488">
+<title>Asistente de Vehículos · RAG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#0D9488; --primary-deep:#0F766E; --cta:#F97316;
+    --bg:#F0FDFA; --surface:#FFFFFF; --text:#134E4A; --muted:#475569;
+    --line:#CCE9E4; --user:#0F766E; --shadow:0 1px 2px rgba(19,78,74,.06),0 8px 24px rgba(19,78,74,.08);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:'Atkinson Hyperlegible',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:var(--bg); color:var(--text);
+    font-size:16px; line-height:1.6;
+    display:flex; flex-direction:column; height:100dvh;
+  }
+  /* ---------- header ---------- */
+  header{
+    position:sticky; top:0; z-index:30;
+    background:var(--primary); color:#fff;
+    padding:calc(env(safe-area-inset-top) + 14px) 16px 14px;
+    display:flex; align-items:center; gap:12px;
+    box-shadow:var(--shadow);
+  }
+  .logo{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.16);
+    display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  header h1{font-size:1.15rem;margin:0;font-weight:700;letter-spacing:-.02em}
+  header p{margin:0;font-size:.8rem;opacity:.9;line-height:1.2}
+  .dot{width:8px;height:8px;border-radius:50%;background:#86EFAC;display:inline-block;margin-right:5px;vertical-align:middle}
+  /* ---------- chat ---------- */
+  main{flex:1 1 auto;overflow-y:auto;padding:18px 14px 6px;-webkit-overflow-scrolling:touch}
+  .wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+  .msg{display:flex;gap:10px;max-width:92%}
+  .msg.user{margin-left:auto;flex-direction:row-reverse}
+  .avatar{width:30px;height:30px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700}
+  .avatar.bot{background:var(--primary);color:#fff}
+  .avatar.you{background:var(--cta);color:#fff}
+  .bubble{padding:12px 15px;border-radius:var(--radius);box-shadow:var(--shadow);white-space:pre-wrap;word-wrap:break-word}
+  .msg.bot .bubble{background:var(--surface);border-top-left-radius:6px}
+  .msg.user .bubble{background:var(--user);color:#fff;border-top-right-radius:6px}
+  /* ---------- sources ---------- */
+  .sources{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+  .sources h3{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:2px 0}
+  .src{background:#F8FFFE;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .src-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px}
+  .tag{font-size:.7rem;font-weight:700;color:var(--primary-deep);background:#D9F3EF;padding:2px 8px;border-radius:999px}
+  .rel{display:flex;align-items:center;gap:6px;font-size:.7rem;color:var(--muted)}
+  .relbar{width:54px;height:6px;border-radius:999px;background:var(--line);overflow:hidden}
+  .relbar i{display:block;height:100%;background:var(--cta);border-radius:999px}
+  .src p{margin:0;font-size:.84rem;color:var(--text);opacity:.92}
+  /* ---------- empty state ---------- */
+  .empty{text-align:center;padding:26px 8px;color:var(--muted)}
+  .empty .big{font-size:clamp(1.6rem,7vw,2.4rem);font-weight:700;color:var(--text);letter-spacing:-.03em;line-height:1.1;margin:0 0 8px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px}
+  .chip{font:inherit;font-size:.85rem;cursor:pointer;background:var(--surface);border:1px solid var(--line);
+    color:var(--text);padding:10px 14px;border-radius:999px;min-height:44px;transition:border-color .2s,background .2s,color .2s}
+  .chip:hover{border-color:var(--primary);background:#fff}
+  .chip:focus-visible{outline:3px solid var(--cta);outline-offset:2px}
+  /* ---------- typing ---------- */
+  .typing{display:flex;gap:5px;padding:14px 16px}
+  .typing span{width:8px;height:8px;border-radius:50%;background:var(--primary);opacity:.5;animation:bounce 1.2s infinite}
+  .typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+  @keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+  /* ---------- composer ---------- */
+  footer{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(240,253,250,0),var(--bg) 22%);
+    padding:10px 14px calc(env(safe-area-inset-bottom) + 12px)}
+  form{max-width:720px;margin:0 auto;display:flex;gap:8px;align-items:flex-end;
+    background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:6px 6px 6px 14px;box-shadow:var(--shadow)}
+  textarea{flex:1;border:0;resize:none;font:inherit;font-size:16px;color:var(--text);background:transparent;
+    max-height:120px;padding:9px 0;outline:none}
+  textarea::placeholder{color:#7A9C97}
+  .send{flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:0;cursor:pointer;background:var(--primary-deep);
+    display:flex;align-items:center;justify-content:center;transition:background .2s,transform .1s}
+  .send:hover{background:var(--primary)} .send:active{transform:scale(.94)}
+  .send:disabled{background:#9CC7C1;cursor:not-allowed}
+  .send:focus-visible{outline:3px solid var(--cta);outline-offset:2px}
+  .err{color:#B91C1C;background:#FEE2E2;border:1px solid #FCA5A5;border-radius:12px;padding:10px 12px;font-size:.85rem}
+  @media (min-width:768px){ .bubble{font-size:1.02rem} }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo" aria-hidden="true">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3v-5l2-5h10l4 5h2v5h-2"/><circle cx="7.5" cy="17.5" r="2"/><circle cx="16.5" cy="17.5" r="2"/></svg>
+  </div>
+  <div>
+    <h1>Asistente de Vehículos</h1>
+    <p><span class="dot"></span>RAG sobre tu base de datos · local</p>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap" id="chat" role="log" aria-live="polite" aria-label="Conversación">
+    <div class="empty" id="empty">
+      <p class="big">Pregunta sobre tus vehículos</p>
+      <p>Respuestas con fuentes citadas, directo desde tu Supabase.</p>
+      <div class="chips" id="chips">
+        <button class="chip" type="button">camioneta diésel barata en buen estado</button>
+        <button class="chip" type="button">¿cuáles están en estado excelente?</button>
+        <button class="chip" type="button">camioneta con menos kilómetros</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <form id="form">
+    <label for="q" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Tu pregunta</label>
+    <textarea id="q" rows="1" placeholder="Escribe tu pregunta…" autocomplete="off"></textarea>
+    <button class="send" id="send" type="submit" aria-label="Enviar pregunta">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+    </button>
+  </form>
+</footer>
+
+<script>
+const chat=document.getElementById('chat'), main=document.getElementById('main'),
+      form=document.getElementById('form'), q=document.getElementById('q'),
+      send=document.getElementById('send'), empty=document.getElementById('empty');
+
+function esc(s){const d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML;}
+function scroll(){main.scrollTop=main.scrollHeight;}
+
+q.addEventListener('input',()=>{q.style.height='auto';q.style.height=Math.min(q.scrollHeight,120)+'px';});
+q.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit();}});
+document.getElementById('chips').addEventListener('click',e=>{
+  if(e.target.classList.contains('chip')){q.value=e.target.textContent;form.requestSubmit();}
+});
+
+function addUser(text){
+  if(empty&&empty.parentNode)empty.remove();
+  chat.insertAdjacentHTML('beforeend',
+    `<div class="msg user"><div class="avatar you" aria-hidden="true">Tú</div><div class="bubble">${esc(text)}</div></div>`);
+  scroll();
+}
+function addTyping(){
+  chat.insertAdjacentHTML('beforeend',
+    `<div class="msg bot" id="typing"><div class="avatar bot" aria-hidden="true">IA</div><div class="bubble typing"><span></span><span></span><span></span></div></div>`);
+  scroll();
+}
+function relPct(d){return Math.max(0,Math.min(100,Math.round((1-Number(d))*100)));}
+function addBot(res){
+  const t=document.getElementById('typing'); if(t)t.remove();
+  let src='';
+  if(res.sources&&res.sources.length){
+    src='<div class="sources"><h3>Fuentes</h3>'+res.sources.map(s=>{
+      const ids=Object.entries(s.ids||{}).map(([k,v])=>`${esc(k)}: ${esc(v)}`).join(' · ');
+      const pct=relPct(s.dist);
+      return `<div class="src"><div class="src-top"><span class="tag">[${s.n}] ${esc(ids||'fila')}</span>
+        <span class="rel" title="Relevancia (distancia ${esc(s.dist)})"><span class="relbar"><i style="width:${pct}%"></i></span>${pct}%</span></div>
+        <p>${esc(s.texto||'')}</p></div>`;
+    }).join('')+'</div>';
+  }
+  chat.insertAdjacentHTML('beforeend',
+    `<div class="msg bot"><div class="avatar bot" aria-hidden="true">IA</div><div class="bubble">${esc(res.answer)}${src}</div></div>`);
+  scroll();
+}
+function addError(text){
+  const t=document.getElementById('typing'); if(t)t.remove();
+  chat.insertAdjacentHTML('beforeend',
+    `<div class="msg bot"><div class="avatar bot" aria-hidden="true">IA</div><div class="bubble err">${esc(text)}</div></div>`);
+  scroll();
+}
+
+form.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const text=q.value.trim(); if(!text)return;
+  addUser(text); q.value=''; q.style.height='auto'; send.disabled=true; addTyping();
+  try{
+    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:text})});
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.error||('Error '+r.status));
+    addBot(data);
+  }catch(err){
+    addError('No se pudo responder: '+err.message+'. ¿Está corriendo Ollama y el servidor?');
+  }finally{ send.disabled=false; q.focus(); }
+});
+</script>
+</body>
+</html>
